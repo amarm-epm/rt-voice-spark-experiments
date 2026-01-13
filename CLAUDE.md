@@ -57,7 +57,14 @@ src/
 - Always push to remote immediately after commit
 - This preserves progress and prevents knowledge loss
 
+**Session tracking:**
+- Each session is documented in `docs/sessions/YYYY-MM-DD.md`
+- At session start: read the latest session file for context
+- At session end: update or create session file with summary
+- Include: initial prompt, work completed, next steps, notes
+
 ## Documentation
 
 - `docs/RESEARCH-REPORT.md` - Architecture research and component options
 - `docs/ENVIRONMENT.md` - DGX Spark environment details
+- `docs/sessions/` - Session-based progress tracking
