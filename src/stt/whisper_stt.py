@@ -1,94 +1,74 @@
 """
-STT wrapper using faster-whisper.
+STT wrapper using pywhispercpp (whisper.cpp with CUDA).
 """
 
 from pathlib import Path
-from faster_whisper import WhisperModel
-
-
-def _detect_device():
-    """Auto-detect best available device."""
-    try:
-        import torch
-        if torch.cuda.is_available():
-            return "cuda", "float16"
-    except ImportError:
-        pass
-    return "cpu", "float32"
+from pywhispercpp.model import Model
 
 
 class WhisperSTT:
-    """Wrapper for Whisper speech-to-text."""
+    """Wrapper for Whisper speech-to-text with CUDA acceleration."""
 
     def __init__(
         self,
-        model_size: str = "base",
-        device: str | None = None,
-        compute_type: str | None = None,
+        model_size: str = "base.en",
+        n_threads: int = 4,
     ):
         """
         Initialize Whisper model.
 
         Args:
-            model_size: Model size (tiny, base, small, medium, large-v3)
-            device: Device to use (cuda, cpu, auto). None = auto-detect
-            compute_type: Compute type (float16, int8, float32). None = auto
+            model_size: Model size (tiny.en, base.en, small.en, medium.en, large-v3)
+            n_threads: Number of CPU threads for decoding
         """
-        if device is None or compute_type is None:
-            auto_device, auto_compute = _detect_device()
-            device = device or auto_device
-            compute_type = compute_type or auto_compute
+        self.model = Model(model_size, n_threads=n_threads)
+        self.model_size = model_size
 
-        self.device = device
-        self.compute_type = compute_type
-        self.model = WhisperModel(
-            model_size,
-            device=device,
-            compute_type=compute_type,
-        )
-
-    def transcribe(
-        self,
-        audio_path: Path | str,
-        language: str = "en",
-    ) -> str:
+    def transcribe(self, audio_path: Path | str) -> str:
         """
         Transcribe audio file to text.
 
         Args:
-            audio_path: Path to audio file
-            language: Language code (e.g., "en")
+            audio_path: Path to audio file (WAV format, 16kHz recommended)
 
         Returns:
             Transcribed text
         """
-        segments, info = self.model.transcribe(
-            str(audio_path),
-            language=language,
-            beam_size=5,
-        )
-
-        # Combine all segments into single text
-        text = " ".join(segment.text.strip() for segment in segments)
+        segments = self.model.transcribe(str(audio_path))
+        text = " ".join([seg.text.strip() for seg in segments])
         return text
 
 
-def test_stt(audio_path: str):
+def test_stt(audio_path: str = None):
     """Quick test of STT functionality."""
-    print("Loading Whisper model (auto-detect device)...")
+    import time
+
+    if audio_path is None:
+        audio_path = "tmp/whisper.cpp/samples/jfk.wav"
+
+    print("Loading Whisper model (CUDA)...")
+    t0 = time.time()
     stt = WhisperSTT()
-    print(f"Using device: {stt.device}, compute_type: {stt.compute_type}")
+    load_time = time.time() - t0
+    print(f"Model loaded in {load_time:.2f}s")
 
     print(f"Transcribing: {audio_path}")
+    t0 = time.time()
     text = stt.transcribe(audio_path)
+    transcribe_time = time.time() - t0
+
     print(f"Transcript: {text}")
+    print()
+    print("=" * 40)
+    print("METRICS")
+    print("=" * 40)
+    print(f"Load time: {load_time:.2f}s")
+    print(f"Transcribe time: {transcribe_time:.2f}s")
 
     return text
 
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1:
-        test_stt(sys.argv[1])
-    else:
-        print("Usage: python -m src.stt.whisper_stt <audio_file>")
+    audio = sys.argv[1] if len(sys.argv) > 1 else None
+    test_stt(audio)
