@@ -41,6 +41,9 @@ src/
 ├── stt/             # Speech-to-text (Whisper)
 ├── llm/             # LLM inference (llama.cpp)
 └── tts/             # Text-to-speech (Piper)
+
+models/              # Model files (gitignored)
+tmp/                 # Working files (gitignored)
 ```
 
 ## Technology Stack
@@ -57,11 +60,20 @@ src/
 - Always push to remote immediately after commit
 - This preserves progress and prevents knowledge loss
 
+**Task tracking:**
+- Use `bd` (beads) for structured task tracking
+- Session logs in `docs/sessions/` for human-readable context
+
 **Session tracking:**
 - Each session is documented in `docs/sessions/YYYY-MM-DD.md`
 - At session start: read the latest session file for context
 - At session end: update or create session file with summary
 - Include: initial prompt, work completed, next steps, notes
+
+**Working files:**
+- Use `tmp/` for runtime/working files (test audio, intermediate outputs, etc.)
+- `tmp/` is gitignored - do not store anything permanent there
+- Keeps project root clean
 
 ## Documentation
 
