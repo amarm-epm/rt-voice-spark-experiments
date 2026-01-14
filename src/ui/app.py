@@ -65,11 +65,12 @@ def create_app(assistant: VoiceAssistant = None) -> gr.Blocks:
         with gr.Row():
             with gr.Column():
                 audio_input = gr.Audio(
-                    sources=["microphone"],
+                    sources=["microphone", "upload"],
                     type="filepath",
-                    label="Record your question",
+                    label="Record or upload audio",
                 )
                 submit_btn = gr.Button("Submit", variant="primary")
+                gr.Markdown("*Note: Microphone requires HTTPS. Use file upload over HTTP.*")
 
             with gr.Column():
                 transcript_output = gr.Textbox(
