@@ -105,10 +105,17 @@ def main():
     app = create_app(assistant)
 
     print("Launching server...")
+    # SSL certs for HTTPS (microphone requires secure context)
+    cert_dir = Path(__file__).parent.parent.parent / "certs"
+    ssl_certfile = cert_dir / "cert.pem"
+    ssl_keyfile = cert_dir / "key.pem"
+
     app.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        share=True,  # HTTPS tunnel for microphone access
+        share=False,
+        ssl_certfile=str(ssl_certfile) if ssl_certfile.exists() else None,
+        ssl_keyfile=str(ssl_keyfile) if ssl_keyfile.exists() else None,
     )
 
 
